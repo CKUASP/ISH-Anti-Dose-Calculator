@@ -4,6 +4,11 @@ import re
 import pandas as pd
 import streamlit as st
 
+st.set_page_config(
+    page_title="Anti Dose Calculator",
+    page_icon="핑크1.png",  # GitHub 저장소에 함께 올린 PNG 파일명
+    layout="wide"
+)
 
 # ==========================================
 # 1. 신기능 및 체중별 metrics 계산 함수
