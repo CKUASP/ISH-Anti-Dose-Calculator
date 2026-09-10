@@ -404,19 +404,19 @@ with col2:
     st.markdown("##### 🔵 Cockcroft-Gault CrCl (체중별)")
 
     abw_label = (
-        "🔵**ABW CrCl (실제체중)** "
+        "🔵**ABW CrCl** "
         if rec == "ABW"
-        else "ABW CrCl (실제체중)"
+        else "ABW CrCl"
     )
     adjbw_label = (
-        "🔵**AdjBW CrCl (보정체중)** "
+        "🔵**AdjBW CrCl** "
         if rec == "AdjBW"
-        else "AdjBW CrCl (보정체중)"
+        else "AdjBW CrCl"
     )
     ibw_label = (
-        "🔵**IBW CrCl (이상체중)** "
+        "🔵**IBW CrCl** "
         if rec == "IBW"
-        else "IBW CrCl (이상체중)"
+        else "IBW CrCl"
     )
 
     c1, c3, c2 = st.columns(3)
