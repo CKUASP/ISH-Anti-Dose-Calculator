@@ -466,7 +466,7 @@ with col2:
             help="mL/min/1.73m² (본원 검사 결과)",
         )
         cy2.metric(
-            label="🟣 **BSA 기반 Cys-C eGFR**",
+            label="🟣 **BSA 기반 Cys-C**",
             value=f"{res['ckd_cys_bsa']:.2f}",
             help="mL/min (환자 BSA 반영한 약물 용량 결정 기준)",
         )
