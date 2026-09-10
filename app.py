@@ -198,18 +198,18 @@ st.markdown(
     
     /* 하이라이팅 CSS - 2개 조합 */
     .highlight-crcl-egfr { 
-        background: linear-gradient(to right, #90CAF9 50%, #A5D6A7 50%) !important; 
+        background: linear-gradient(135deg, #90CAF9 50%, #A5D6A7 50%) !important; 
     }
     .highlight-crcl-cysc { 
-        background: linear-gradient(to right, #90CAF9 50%, #CE93D8 50%) !important; 
+        background: linear-gradient(135deg, #90CAF9 50%, #CE93D8 50%) !important; 
     }
     .highlight-egfr-cysc { 
-        background: linear-gradient(to right, #A5D6A7 50%, #CE93D8 50%) !important; 
+        background: linear-gradient(135deg, #A5D6A7 50%, #CE93D8 50%) !important; 
     }
     
     /* 하이라이팅 CSS - 3개 모두 중복 */
     .highlight-all { 
-        background: linear-gradient(to right, #90CAF9 33.3%, #A5D6A7 33.3% 66.6%, #CE93D8 66.6%) !important; 
+        background: linear-gradient(135deg, #90CAF9 33.3%, #A5D6A7 33.3% 66.6%, #CE93D8 66.6%) !important; 
     }
     
     .dosage-table {
@@ -404,17 +404,17 @@ with col2:
     st.markdown("##### 🔵 Cockcroft-Gault CrCl (체중별)")
 
     abw_label = (
-        "**ABW CrCl (실제체중)** 💡"
+        "🔵**ABW CrCl (실제체중)** "
         if rec == "ABW"
         else "ABW CrCl (실제체중)"
     )
     adjbw_label = (
-        "**AdjBW CrCl (보정체중)** 💡"
+        "🔵**AdjBW CrCl (보정체중)** "
         if rec == "AdjBW"
         else "AdjBW CrCl (보정체중)"
     )
     ibw_label = (
-        "**IBW CrCl (이상체중)** 💡"
+        "🔵**IBW CrCl (이상체중)** "
         if rec == "IBW"
         else "IBW CrCl (이상체중)"
     )
@@ -451,7 +451,7 @@ with col2:
         help="mL/min/1.73m² (환자 신기능 평가 기준)",
     )
     k3.metric(
-        label="**BSA 기반 CKD-EPI (2021)**",
+        label="🟢 **BSA 기반 CKD-EPI** ",
         value=f"{res['ckd_21_bsa']:.2f}",
         help="mL/min (환자 BSA 반영한 약물 용량 결정 기준)",
     )
@@ -466,7 +466,7 @@ with col2:
             help="mL/min/1.73m² (본원 검사 결과)",
         )
         cy2.metric(
-            label="**BSA 기반 Cys-C eGFR**",
+            label="🟣 **BSA 기반 Cys-C eGFR**",
             value=f"{res['ckd_cys_bsa']:.2f}",
             help="mL/min (환자 BSA 반영한 약물 용량 결정 기준)",
         )
