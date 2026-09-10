@@ -1,15 +1,19 @@
-import streamlit as st
-
-st.set_page_config(
-    page_title="Anti Dose Calculator",
-    page_icon="512.png",  # GitHub 저장소에 함께 올린 PNG 파일명
-    layout="wide"
-)
-
 import math
+import base64
 import os
 import re
 import pandas as pd
+import streamlit as st
+
+# ==========================================
+# 0. 페이지 설정 (최상단)
+# ==========================================
+st.set_page_config(
+    page_title="Anti Dose Calculator",
+    page_icon="512.png",  # GitHub 저장소에 함께 올린 PNG 파일명
+    layout="wide",
+)
+
 
 # ==========================================
 # 1. 신기능 및 체중별 metrics 계산 함수
@@ -79,7 +83,6 @@ def calculate_metrics(age, gender, height, weight, scr, cysc=0.8, use_cysc="N"):
         cys_alpha = -0.323 if is_male else -0.499
         cys_gender_factor = 1.000 if is_male else 0.932
 
-        # 📌 [수정] Cystatin C Cutoff (0.8 mg/L) 연산 수정
         min_cysc = min(cysc / 0.8, 1.0)
         max_cysc = max(cysc / 0.8, 1.0)
 
@@ -104,7 +107,7 @@ def calculate_metrics(age, gender, height, weight, scr, cysc=0.8, use_cysc="N"):
         rec_crcl_val = crcl_ibw
 
     results = {
-        "act_wt": weight,  # 📌 [추가] 용량 계산용 환자 체중
+        "act_wt": weight,
         "bsa": bsa,
         "bmi": bmi,
         "ibw": ibw,
@@ -130,24 +133,31 @@ def calculate_metrics(age, gender, height, weight, scr, cysc=0.8, use_cysc="N"):
 @st.cache_data
 def load_dosage_data():
     file_path = "용량.xlsx"
-    
+
     if not os.path.exists(file_path):
         return pd.DataFrame()
 
-    # 1. 파일 읽기
     df = pd.read_excel(file_path)
 
-    # 2. 모든 문자열(object) 컬럼의 '^' 기호를 HTML 줄바꿈 '<br>'로 변환
     for col in df.select_dtypes(include=["object"]).columns:
         df[col] = df[col].astype(str).str.replace("^", "<br>", regex=False)
 
-    # 3. 변환이 끝난 후 최종 반환
     return df
+
 
 # ==========================================
 # 3. Streamlit UI 레이아웃 구성
 # ==========================================
-st.set_page_config(page_title="Anti Dose Calculator", layout="wide")
+def get_image_base64(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+    return ""
+
+
+blue_img_b64 = get_image_base64("blue.png")
+pink_img_b64 = get_image_base64("pink.png")
 
 st.markdown(
     """
@@ -166,15 +176,6 @@ st.markdown(
         padding-top: 8px;
     }
 
-    /* 우측 컬럼 세로/가로 간격 줄이기 */
-    div[data-testid="stMetric"] {
-        padding: 4px 8px !important;
-    }
-
-    div[data-testid="stMetricLabel"] {
-        margin-bottom: 0px !important;
-    }
-
     div[data-testid="stMarkdownContainer"] > hr {
         margin-top: 0.5rem !important;
         margin-bottom: 0.5rem !important;
@@ -191,7 +192,7 @@ st.markdown(
         margin-bottom: -12px !important;
     }
 
-    /* 하이라이팅 CSS - 단일 지표 */
+    /* 하이라이팅 CSS - 표 내 단일 지표 */
     .highlight-crcl { background-color: #90CAF9 !important; } /* 파랑 */
     .highlight-egfr { background-color: #A5D6A7 !important; } /* 초록 */
     .highlight-cysc { background-color: #CE93D8 !important; } /* 보라 */
@@ -222,8 +223,8 @@ st.markdown(
     .dosage-table th, .dosage-table td {
         border: 1px solid #ddd;
         padding: 8px;
-        word-break: keep-all;   /* 👈 핵심: 단어 단위 줄바꿈 적용 */
-        white-space: normal;  /* 👈 띄어쓰기 기준 자연스러운 줄바꿈 */
+        word-break: keep-all;
+        white-space: normal;
         text-align: center;
         font-weight: bold;
     }
@@ -235,12 +236,181 @@ st.markdown(
         font-weight: bold;
         background-color: #f1f3f5;
     }
+
+    .title-box {
+        background: #ffffff;
+        padding: 16px 20px;
+        border-radius: 28px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .title-img {
+        width: 90px;
+        height: 90px;
+        object-fit: contain;
+    }
+
+    .title-text {
+        color: #0c4da2;
+        font-size: 50px;
+        font-weight: bold;
+        text-align: center;
+        margin: 0;
+    }
+
+    /* 📌 신기능 결과 뭉툭한 네모 박스(카드) 스타일 정의 */
+    .metric-card {
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin-bottom: 4px;
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+        background-color: #f8f9fa;
+    }
+    
+    .metric-card-label {
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: #495057;
+        margin-bottom: 2px;
+    }
+    
+    .metric-card-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #212529;
+        line-height: 1.2;
+    }
+
+    .metric-card-sub {
+        font-size: 0.72rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+
+    /* CrCl 강조 박스 (파란색 계열) */
+    .card-crcl-active {
+        background-color: #e3f2fd !important;
+        border: 2px solid #2196f3 !important;
+        box-shadow: 0 4px 10px rgba(33, 150, 243, 0.18);
+    }
+    .card-crcl-active .metric-card-label {
+        color: #0d47a1 !important;
+    }
+    .card-crcl-active .metric-card-value {
+        color: #1565c0 !important;
+    }
+
+    /* eGFR 강조 박스 (초록색 계열) */
+    .card-egfr-active {
+        background-color: #e8f5e9 !important;
+        border: 2px solid #4caf50 !important;
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.18);
+    }
+    .card-egfr-active .metric-card-label {
+        color: #1b5e20 !important;
+    }
+    .card-egfr-active .metric-card-value {
+        color: #2e7d32 !important;
+    }
+
+    /* Cystatin-C 강조 박스 (보라색 계열) */
+    .card-cysc-active {
+        background-color: #f3e5f5 !important;
+        border: 2px solid #ab47bc !important;
+        box-shadow: 0 4px 10px rgba(171, 71, 188, 0.18);
+    }
+    .card-cysc-active .metric-card-label {
+        color: #4a148c !important;
+    }
+    .card-cysc-active .metric-card-value {
+        color: #7b1fa2 !important;
+    }
+
+    /* 📌 CAPTION 텍스트 스타일 강화 (더 진하고 명확하게) */
+    div[data-testid="stCaptionContainer"] {
+        margin-top: 6px !important;
+        margin-bottom: -12px !important;
+        font-weight: 600 !important;   /* 👈 글자 굵기 (500~700 추천) */
+        color: #31373d !important;     /* 👈 더 진한 회색/검은색 계열 */
+    }
+
+    /* caption 내부 p 태그 및 마크다운 강제 적용 */
+    div[data-testid="stCaptionContainer"] p {
+        font-weight: 600 !important;
+        color: #31373d !important;
+    }
+
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-st.title("💊 Anti Dose Calculator")
+title_html = f"""
+<div class="title-box">
+    <img src="{blue_img_b64}" class="title-img">
+    <div class="title-text">
+        Antibiotics Dose Calculator
+    </div>
+    <img src="{pink_img_b64}" class="title-img">
+</div>
+"""
+
+st.markdown(title_html, unsafe_allow_html=True)
+
+# 제목 박스 출력 후, st.markdown("---") 대신 아래 코드를 넣으세요.
+
+# 이용 안내 박스 우측에 들어갈 로고 이미지 (blue.png 활용)
+logo_img_b64 = get_image_base64("logo.png")
+
+st.markdown(
+    f"""
+    <div style="
+        background-color: #f0f7ff;
+        border-left: 5px solid #0066cc;
+        padding: 16px 20px;
+        border-radius: 6px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    ">
+        <!-- 왼쪽: 이용 안내 및 참고사항 내용 -->
+        <div style="flex: 1;">
+            <div style="font-weight: bold; color: #004085; font-size: 1.05rem; margin-bottom: 6px;">
+                ℹ️ 이용 안내 및 참고사항
+            </div>
+            <div style="font-size: 0.88rem; color: #333333; line-height: 1.5;">
+                • 신기능에 따른 용량 조절 시에는 <b>원칙적으로 CrCl</b>을 기준으로 하며 필요 시 eGFR을 참고할 수 있습니다.<br>
+                • 신기능에 따른 제시되는 용량은 <b>본원 항생제 사용 지침서</b>를 기반으로 하며, 최종 용량 결정 시에는 환자의 전반적인 임상 상황을 고려하시기 바랍니다.
+            </div>
+        </div>
+        <!-- 오른쪽: 로고 이미지 및 ASP팀 문구 -->
+        <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-left: 16px;
+            border-left: 1px solid #d0e2ff;
+            min-width: 300px;
+        ">
+            <img src="{logo_img_b64}" style="width: 200px; height: 50px; object-fit: contain; margin-bottom: 4px;">
+            <span style="font-size: 0.95rem; font-weight: bold; color: #59595b; white-space: nowrap;">ASP 전담팀</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.markdown("---")
 
 col1, col2 = st.columns(2)
@@ -373,19 +543,67 @@ with col1:
         age, gender, height, weight, scr, cystatin_c, use_cysc
     )
 
+# --- [BMI 조건별 스타일 및 아이콘 설정] ---
+    bmi_val = res['bmi']
+    if bmi_val < 18.5:
+        bmi_label = "BMI <span style='color: #4277bf; font-size: 1.2em;'>▼</span>"
+        bmi_color = "#4277bf"  # 파스텔 블루
+    elif bmi_val > 25:
+        bmi_label = "BMI <span style='color: #e66f61; font-size: 1.2em;'>▲</span>"
+        bmi_color = "#e66f61"  # 파스텔 레드
+    else:
+        bmi_label = "BMI"
+        bmi_color = "#212529"  # 기본 다크 그레이
+
     st.write("")
     st.markdown(
-        f"**IBW:** `{res['ibw']:.1f} kg` | "
-        f"**AdjBW:** `{res['adjbw']:.1f} kg` | "
-        f"**BMI:** `{res['bmi']:.1f} kg/m²` | "
-        f"**BSA:** `{res['bsa']:.2f} m²`"
+        f"""
+        <div style="
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 28px;
+        ">
+            <div><span style="color: #6c757d; font-weight: 600;">IBW</span><br><b style="font-size: 1.1rem; color: #212529;">{res['ibw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
+            <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
+            <div><span style="color: #6c757d; font-weight: 600;">AdjBW</span><br><b style="font-size: 1.1rem; color: #212529;">{res['adjbw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
+            <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
+            <div><span style="color: #6c757d; font-weight: 600;">{bmi_label}</span><br><b style="font-size: 1.1rem; color: {bmi_color};">{bmi_val:.1f}</b> <small style="color: #6c757d;">kg/m²</small></div>
+            <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
+            <div><span style="color: #6c757d; font-weight: 600;">BSA</span><br><b style="font-size: 1.1rem; color: #212529;">{res['bsa']:.2f}</b> <small style="color: #6c757d;">m²</small></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
+
+
+# 📌 [수정] 뭉툭한 네모 박스 형태(카드)로 제목과 수치를 시각화하는 함수
+def render_metric_card(label, value, help_text, is_selected=False, card_type="crcl"):
+    card_class = "metric-card"
+    if is_selected:
+        card_class += f" card-{card_type}-active"
+
+    html = f"""
+    <div class="{card_class}" title="{help_text}">
+        <div class="metric-card-label">{label}</div>
+        <div class="metric-card-value">{value}</div>
+        <div class="metric-card-sub">{help_text}</div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
 
 
 with col2:
     st.subheader("📊 신기능 평가 결과")
 
     rec = res["recommended_crcl"]
+
     if rec == "AdjBW":
         st.caption(
             f"💡 **BMI {res['bmi']:.1f} (과체중):** **AdjBW CrCl** 사용이 권장됩니다."
@@ -399,96 +617,98 @@ with col2:
             f"💡 **BMI {res['bmi']:.1f} (정상체중):** **IBW CrCl** 사용이 권장됩니다."
         )
 
-    st.markdown("---")
-
     st.markdown("##### 🔵 CrCl (Creatinine Clearance)")
 
-    abw_label = (
-        "🔵**ABW CrCl** "
-        if rec == "ABW"
-        else "ABW CrCl"
-    )
-    adjbw_label = (
-        "🔵**AdjBW CrCl** "
-        if rec == "AdjBW"
-        else "AdjBW CrCl"
-    )
-    ibw_label = (
-        "🔵**IBW CrCl** "
-        if rec == "IBW"
-        else "IBW CrCl"
-    )
-
     c1, c3, c2 = st.columns(3)
-    c1.metric(
-        label=abw_label,
-        value=f"{res['crcl_abw']:.2f}",
-        help="Actual Body Weight 기준",
-    )
-    c2.metric(
-        label=adjbw_label,
-        value=f"{res['crcl_adjbw']:.2f}",
-        help="Adjusted Body Weight 기준 (과체중 환자 권장)",
-    )
-    c3.metric(
-        label=ibw_label,
-        value=f"{res['crcl_ibw']:.2f}",
-        help="Ideal Body Weight 기준",
-    )
-
+    with c1:
+        render_metric_card(
+            label="🔵 ABW CrCl" if rec == "ABW" else "ABW CrCl",
+            value=f"{res['crcl_abw']:.2f}",
+            help_text="Actual Body Weight 기준",
+            is_selected=(rec == "ABW"),
+            card_type="crcl",
+        )
+    with c3:
+        render_metric_card(
+            label="🔵 IBW CrCl" if rec == "IBW" else "IBW CrCl",
+            value=f"{res['crcl_ibw']:.2f}",
+            help_text="Ideal Body Weight 기준",
+            is_selected=(rec == "IBW"),
+            card_type="crcl",
+        )
+    with c2:
+        render_metric_card(
+            label="🔵 AdjBW CrCl" if rec == "AdjBW" else "AdjBW CrCl",
+            value=f"{res['crcl_adjbw']:.2f}",
+            help_text="Adjusted Body Weight 기준 <br>",
+            is_selected=(rec == "AdjBW"),
+            card_type="crcl",
+        )
     st.markdown("---")
 
     st.markdown("##### 🟢 CKD-EPI eGFR")
     k3, k2, k1 = st.columns(3)
-    k1.metric(
-        label="CKD-EPI (2009)",
-        value=f"{res['ckd_09']:.2f}",
-        help="mL/min/1.73m² (본원 검사 결과)",
-    )
-    k2.metric(
-        label="CKD-EPI (2021)",
-        value=f"{res['ckd_21']:.2f}",
-        help="mL/min/1.73m² (환자 신기능 평가 기준)",
-    )
-    k3.metric(
-        label="🟢 **BSA 기반 CKD-EPI** ",
-        value=f"{res['ckd_21_bsa']:.2f}",
-        help="mL/min (환자 BSA 반영한 약물 용량 결정 기준)",
-    )
+    with k3:
+        # 약물 용량 결정의 주요 기준이 되는 BSA 기반 항목 네모 박스 하이라이트
+        render_metric_card(
+            label="🟢 BSA 기반 CKD-EPI eGFR",
+            value=f"{res['ckd_21_bsa']:.2f}",
+            help_text="mL/min (용량 결정 기준)",
+            is_selected=True,
+            card_type="egfr",
+        )
+    with k2:
+        render_metric_card(
+            label="CKD-EPI eGFR(2021)",
+            value=f"{res['ckd_21']:.2f}",
+            help_text="mL/min/1.73m² (신기능 평가 기준)",
+            is_selected=False,
+            card_type="egfr",
+        )
+    with k1:
+        render_metric_card(
+            label="CKD-EPI eGFR(2009)",
+            value=f"{res['ckd_09']:.2f}",
+            help_text="mL/min/1.73m² (본원 보고 결과)",
+            is_selected=False,
+            card_type="egfr",
+        )
+
+    st.markdown("---")
 
     if use_cysc == "Y":
-        st.markdown("---")
+        
         st.markdown("##### 🟣 Cystatin-C eGFR")
         cy2, cy1, cy3 = st.columns(3)
-        cy1.metric(
-            label="Cystatin-C eGFR",
-            value=f"{res['ckd_cys']:.2f}",
-            help="mL/min/1.73m² (본원 검사 결과)",
-        )
-        cy2.metric(
-            label="🟣 **BSA 기반 Cys-C**",
-            value=f"{res['ckd_cys_bsa']:.2f}",
-            help="mL/min (환자 BSA 반영한 약물 용량 결정 기준)",
-        )
+        with cy2:
+            render_metric_card(
+                label="🟣 BSA 기반 Cystatin-C eGFR",
+                value=f"{res['ckd_cys_bsa']:.2f}",
+                help_text="mL/min (용량 결정 기준)",
+                is_selected=True,
+                card_type="cysc",
+            )
+        with cy1:
+            render_metric_card(
+                label="Cystatin-C eGFR",
+                value=f"{res['ckd_cys']:.2f}",
+                help_text="mL/min/1.73m² (본원 보고 결과)",
+                is_selected=False,
+                card_type="cysc",
+            )
 
 st.markdown("---")
 
 
 def parse_and_calculate_dose(dose_str, weight_kg):
-    """문자열 내에서 mg/kg 바로 앞에 붙은 숫자(범위 포함)만 추출하여 체중 기반 용량으로 변환합니다.
-
-    셀 내에 여러 개의 mg/kg 패턴이 있어도 모두 변환하며, 앞뒤 텍스트(Load, qHD 등)는 유지합니다.
-    """
     if not isinstance(dose_str, str) or "mg/kg" not in dose_str.lower():
         return dose_str
 
-    # mg/kg 바로 앞의 숫자나 범위만 정확하게 매칭 (예: "25", "25.5", "25~30", "25-30")
     pattern = r"(\d+(?:\.\d+)?(?:\s*[\~\-]\s*\d+(?:\.\d+)?)?)\s*mg/kg"
 
     def replace_match(match):
         num_part = match.group(1).strip()
 
-        # 1. 범위 용량 처리 (예: 25~30mg/kg)
         if "~" in num_part or "-" in num_part:
             sep = "~" if "~" in num_part else "-"
             parts = num_part.split(sep)
@@ -499,7 +719,6 @@ def parse_and_calculate_dose(dose_str, weight_kg):
             except ValueError:
                 return match.group(0)
 
-        # 2. 단일 용량 처리 (예: 25mg/kg)
         else:
             try:
                 val = float(num_part) * weight_kg
@@ -507,7 +726,6 @@ def parse_and_calculate_dose(dose_str, weight_kg):
             except ValueError:
                 return match.group(0)
 
-    # dose_str 내의 모든 mg/kg 패턴을 검색하여 계산 결과로 치환
     return re.sub(pattern, replace_match, dose_str, flags=re.IGNORECASE)
 
 
@@ -518,7 +736,11 @@ st.subheader("💉 항생제 용량 선택")
 
 df_dosage = load_dosage_data()
 
-if not df_dosage.empty and "성분명" in df_dosage.columns and "표기 명칭" in df_dosage.columns:
+if (
+    not df_dosage.empty
+    and "성분명" in df_dosage.columns
+    and "표기 명칭" in df_dosage.columns
+):
     display_names = sorted(df_dosage["표기 명칭"].dropna().unique())
     selected_display_name = st.selectbox(
         "항생제 성분명을 검색하거나 선택하세요", display_names
@@ -538,7 +760,6 @@ if not df_dosage.empty and "성분명" in df_dosage.columns and "표기 명칭" 
         for td in target_drugs
     )
 
-    # 비만 조건: (ABW/IBW > 120%) OR (BMI >= 30)
     is_obese = (wt_ratio > 120) or (bmi_val >= 30)
 
     if is_target_aminoglycoside and is_obese:
@@ -547,7 +768,6 @@ if not df_dosage.empty and "성분명" in df_dosage.columns and "표기 명칭" 
     else:
         patient_weight = act_wt
         wt_calc_label = "Actual BW (실제체중)"
-
 
     def is_in_range(val, min_val, max_val, current_dialysis, cell_label):
         if current_dialysis != "해당 없음":
@@ -560,7 +780,6 @@ if not df_dosage.empty and "성분명" in df_dosage.columns and "표기 명칭" 
 
     crcl_val = res["rec_crcl_val"]
 
-    # Ertapenem일 때 BSA 미반영 값 적용 분기
     if (
         "ertapenem" in ingredient_name.lower()
         or "ertapenem" in selected_display_name.lower()
@@ -642,8 +861,6 @@ if not df_dosage.empty and "성분명" in df_dosage.columns and "표기 명칭" 
             unsafe_allow_html=True,
         )
 
-
-    # CRAB 관련 경고 문구
     crab_keywords = ["CRAB"]
     if any(
         keyword.lower() in ingredient_name.lower()
@@ -683,9 +900,8 @@ if not df_dosage.empty and "성분명" in df_dosage.columns and "표기 명칭" 
         )
 
     st.caption(
-        f"※ `mg/kg` 단위가 포함된 항생제는 입력된 환자 체중({patient_weight:.1f} kg) 기준으로 계산되어 표시됩니다. (셀 마우스 오버 시 원본 단위 확인 가능) "
+        f"※ 체중 당 용량이 권고되는 항생제는 입력된 **실제 체중({patient_weight:.1f} kg)** 기준으로 계산되어 표시됩니다. (셀 마우스 오버 시 원본 단위 확인 가능)"
     )
-
 
 else:
     st.error(
