@@ -390,7 +390,7 @@ st.markdown(
             </div>
             <div style="font-size: 0.88rem; color: #333333; line-height: 1.5;">
                 • 신기능에 따른 용량 조절 시에는 <b>원칙적으로 CrCl</b>을 기준으로 하며 필요 시 eGFR을 참고할 수 있습니다.<br>
-                • 신기능에 따른 제시되는 용량은 <b>본원 항생제 사용 지침서</b>를 기반으로 하며, 최종 용량 결정 시에는 환자의 전반적인 임상 상황을 고려하시기 바랍니다.
+                • 권고 용량은 <b>본원 항생제 사용 지침서</b>를 기반으로 하며, 용량 결정 시에는 전반적인 임상 상황을 고려하시기 바랍니다.
             </div>
         </div>
         <!-- 오른쪽: 로고 이미지 및 ASP팀 문구 -->
@@ -651,7 +651,7 @@ with col2:
     with k3:
         # 약물 용량 결정의 주요 기준이 되는 BSA 기반 항목 네모 박스 하이라이트
         render_metric_card(
-            label="🟢 BSA 기반 CKD-EPI eGFR",
+            label="🟢 BSA 기반 CKD-EPI",
             value=f"{res['ckd_21_bsa']:.2f}",
             help_text="mL/min (용량 결정 기준)",
             is_selected=True,
@@ -661,7 +661,7 @@ with col2:
         render_metric_card(
             label="CKD-EPI eGFR(2021)",
             value=f"{res['ckd_21']:.2f}",
-            help_text="mL/min/1.73m² (신기능 평가 기준)",
+            help_text="mL/min/1.73m² (신기능)",
             is_selected=False,
             card_type="egfr",
         )
@@ -669,7 +669,7 @@ with col2:
         render_metric_card(
             label="CKD-EPI eGFR(2009)",
             value=f"{res['ckd_09']:.2f}",
-            help_text="mL/min/1.73m² (본원 보고 결과)",
+            help_text="mL/min/1.73m² (본원 결과)",
             is_selected=False,
             card_type="egfr",
         )
@@ -682,7 +682,7 @@ with col2:
         cy2, cy1, cy3 = st.columns(3)
         with cy2:
             render_metric_card(
-                label="🟣 BSA 기반 Cystatin-C eGFR",
+                label="🟣 BSA 기반 Cystatin-C",
                 value=f"{res['ckd_cys_bsa']:.2f}",
                 help_text="mL/min (용량 결정 기준)",
                 is_selected=True,
@@ -692,7 +692,7 @@ with col2:
             render_metric_card(
                 label="Cystatin-C eGFR",
                 value=f"{res['ckd_cys']:.2f}",
-                help_text="mL/min/1.73m² (본원 보고 결과)",
+                help_text="mL/min/1.73m² (본원 결과)",
                 is_selected=False,
                 card_type="cysc",
             )
