@@ -1,7 +1,3 @@
-import math
-import os
-import re
-import pandas as pd
 import streamlit as st
 
 st.set_page_config(
@@ -9,6 +5,11 @@ st.set_page_config(
     page_icon="핑크1.png",  # GitHub 저장소에 함께 올린 PNG 파일명
     layout="wide"
 )
+
+import math
+import os
+import re
+import pandas as pd
 
 # ==========================================
 # 1. 신기능 및 체중별 metrics 계산 함수
