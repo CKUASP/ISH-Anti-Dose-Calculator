@@ -401,7 +401,7 @@ with col2:
 
     st.markdown("---")
 
-    st.markdown("##### 🔵 Cockcroft-Gault CrCl (체중별)")
+    st.markdown("##### 🔵 CrCl (Creatinine Clearance)")
 
     abw_label = (
         "🔵**ABW CrCl** "
