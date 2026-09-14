@@ -640,7 +640,7 @@ with col2:
         render_metric_card(
             label="🔵 AdjBW CrCl" if rec == "AdjBW" else "AdjBW CrCl",
             value=f"{res['crcl_adjbw']:.2f}",
-            help_text="Adjusted Body Weight 기준 <br>",
+            help_text="Adjusted Body Weight 기준",
             is_selected=(rec == "AdjBW"),
             card_type="crcl",
         )
