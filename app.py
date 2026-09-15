@@ -76,24 +76,47 @@ def calculate_metrics(age, gender, height, weight, scr, cysc=0.8, use_cysc="N"):
 
     ckd_epi_2021_bsa = ckd_epi_2021 * (bsa / 1.73)
 
-    # --- [CKD-EPI Cystatin C 2021 계산] ---
-    ckd_epi_cys = 0.0
-    ckd_epi_cys_bsa = 0.0
+# --- [CKD-EPI Cystatin C (2012 & 2021) 계산] ---
+# --- [CKD-EPI Cystatin C 계산] ---
+    ckd_epi_cys_2012 = 0.0
+    ckd_epi_cr_cys_2021 = 0.0
+    ckd_epi_cys_bsa = 0.0  # 용량 결정용 BSA 보정값
+
     if use_cysc == "Y" and cysc > 0:
-        cys_alpha = -0.323 if is_male else -0.499
-        cys_gender_factor = 1.000 if is_male else 0.932
+        # 1) 2012 CKD-EPI Cystatin C 단독 공식 (Cys-C eGFR 2012)
+        min_cysc_12 = min(cysc / 0.8, 1.0)
+        max_cysc_12 = max(cysc / 0.8, 1.0)
+        cys_gender_factor_12 = 1.000 if is_male else 0.932
 
-        min_cysc = min(cysc / 0.8, 1.0)
-        max_cysc = max(cysc / 0.8, 1.0)
-
-        ckd_epi_cys = (
+        ckd_epi_cys_2012 = (
             133
-            * (min_cysc**cys_alpha)
-            * (max_cysc**-1.328)
+            * (min_cysc_12**-0.499)
+            * (max_cysc_12**-1.328)
             * (0.996**age)
-            * cys_gender_factor
+            * cys_gender_factor_12
         )
-        ckd_epi_cys_bsa = ckd_epi_cys * (bsa / 1.73)
+
+        # 2) 2021 CKD-EPI Creatinine-Cystatin C 혼합 공식 (Cys-C eGFR 2021)
+        kappa_comb = 0.9 if is_male else 0.7
+        alpha_comb = (
+            (-0.144 if scr <= 0.9 else -0.544)
+            if is_male
+            else (-0.219 if scr <= 0.7 else -0.544)
+        )
+        beta_comb = -0.323 if cysc <= 0.8 else -0.778
+        gender_factor_comb = 1.000 if is_male else 0.963
+
+        ckd_epi_cr_cys_2021 = (
+            135
+            * ((scr / kappa_comb) ** alpha_comb)
+            * ((cysc / 0.8) ** beta_comb)
+            * (0.9961**age)
+            * gender_factor_comb
+        )
+
+        # BSA 적용값 (최신 2021년 eGFR cr-cys 기준)
+        ckd_epi_cys_bsa = ckd_epi_cr_cys_2021 * (bsa / 1.73)
+
 
     # 체중별 권장 CrCl 설정
     if bmi > 25:
@@ -119,7 +142,8 @@ def calculate_metrics(age, gender, height, weight, scr, cysc=0.8, use_cysc="N"):
         "ckd_09": ckd_epi_2009,
         "ckd_21": ckd_epi_2021,
         "ckd_21_bsa": ckd_epi_2021_bsa,
-        "ckd_cys": ckd_epi_cys,
+        "ckd_cys_12": ckd_epi_cys_2012,
+        "ckd_cys_21": ckd_epi_cr_cys_2021,
         "ckd_cys_bsa": ckd_epi_cys_bsa,
         "recommended_crcl": recommended_crcl,
         "rec_crcl_val": rec_crcl_val,
@@ -568,7 +592,7 @@ with col1:
             align-items: center;
             text-align: center;
             font-size: 1.2rem;
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         ">
             <div><span style="color: #6c757d; font-weight: 600;">IBW</span><br><b style="font-size: 1.1rem; color: #212529;">{res['ibw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
             <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
@@ -679,20 +703,29 @@ with col2:
     if use_cysc == "Y":
         
         st.markdown("##### 🟣 Cystatin-C eGFR")
-        cy2, cy1, cy3 = st.columns(3)
+        cy2, cy3, cy1 = st.columns(3)
         with cy2:
             render_metric_card(
-                label="🟣 BSA 기반 Cystatin-C",
+                label="🟣 BSA 기반 Cr + Cys-C",
                 value=f"{res['ckd_cys_bsa']:.2f}",
-                help_text="mL/min (용량 결정 기준)",
+                help_text="mL/min (용량 결정 기준) <br> BSA 기반 병합 공식",
                 is_selected=True,
                 card_type="cysc",
             )
         with cy1:
             render_metric_card(
-                label="Cystatin-C eGFR",
-                value=f"{res['ckd_cys']:.2f}",
-                help_text="mL/min/1.73m² (본원 결과)",
+                label="Cys-C eGFR(2012)",
+                value=f"{res['ckd_cys_12']:.2f}",
+                help_text="mL/min/1.73m² (본원 결과) <br> Cystatin-C 단독 공식",
+                is_selected=False,
+                card_type="cysc",
+            )
+
+        with cy3:
+            render_metric_card(
+                label="Cr + Cys-C eGFR(2021)",
+                value=f"{res['ckd_cys_21']:.2f}",
+                help_text="mL/min/1.73m² (신기능) <br> Scr + Cystatin-C 병합 공식",
                 is_selected=False,
                 card_type="cysc",
             )
@@ -785,7 +818,7 @@ if (
         or "ertapenem" in selected_display_name.lower()
     ):
         egfr_val = res["ckd_21"]
-        cysc_val = res["ckd_cys"]
+        cysc_val = res["ckd_cys_21"]
     else:
         egfr_val = res["ckd_21_bsa"]
         cysc_val = res["ckd_cys_bsa"]
