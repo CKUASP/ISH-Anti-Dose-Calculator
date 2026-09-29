@@ -380,7 +380,7 @@ title_html = f"""
 <div class="title-box">
     <img src="{blue_img_b64}" class="title-img">
     <div class="title-text">
-        Antibiotics Dose Calculator
+        Anti Dose Calculator
     </div>
     <img src="{pink_img_b64}" class="title-img">
 </div>
@@ -391,7 +391,6 @@ st.markdown(title_html, unsafe_allow_html=True)
 # 제목 박스 출력 후, st.markdown("---") 대신 아래 코드를 넣으세요.
 
 # 이용 안내 박스 우측에 들어갈 로고 이미지 (blue.png 활용)
-logo_img_b64 = get_image_base64("logo.png")
 
 st.markdown(
     f"""
@@ -407,28 +406,13 @@ st.markdown(
         align-items: center;
         gap: 16px;
     ">
-        <!-- 왼쪽: 이용 안내 및 참고사항 내용 -->
         <div style="flex: 1;">
-            <div style="font-weight: bold; color: #004085; font-size: 1.05rem; margin-bottom: 6px;">
-                ℹ️ 이용 안내 및 참고사항
-            </div>
-            <div style="font-size: 0.88rem; color: #333333; line-height: 1.5;">
-                • 신기능에 따른 용량 조절 시에는 <b>원칙적으로 CrCl</b>을 기준으로 하며 필요 시 eGFR을 참고할 수 있습니다.<br>
-                • 권고 용량은 <b>본원 항생제 사용 지침서</b>를 기반으로 하며, 용량 결정 시에는 전반적인 임상 상황을 고려하시기 바랍니다.
-            </div>
+        <div style="font-weight: bold; color: #004085; font-size: 1.05rem; margin-bottom: 6px;">
+            ℹ️ 이용 안내 및 참고사항
         </div>
-        <!-- 오른쪽: 로고 이미지 및 ASP팀 문구 -->
-        <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding-left: 16px;
-            border-left: 1px solid #d0e2ff;
-            min-width: 300px;
-        ">
-            <img src="{logo_img_b64}" style="width: 200px; height: 50px; object-fit: contain; margin-bottom: 4px;">
-            <span style="font-size: 0.95rem; font-weight: bold; color: #59595b; white-space: nowrap;">ASP 전담팀</span>
+        <div style="font-size: 0.88rem; color: #333333; line-height: 1.5;">
+            • 신기능에 따른 용량 조절 시에는 <b>원칙적으로 CrCl</b>을 기준으로 하며 필요 시 eGFR을 참고할 수 있습니다.<br>
+            • 권고 용량은 <b>본원 항생제 사용 지침서</b>를 기반으로 하며, 용량 결정 시에는 전반적인 임상 상황을 고려하시기 바랍니다. - <b>ASP 전담팀</b>
         </div>
     </div>
     """,
@@ -940,3 +924,23 @@ else:
     st.error(
         "엑셀 파일이 존재하지 않거나 '성분명'과 '표기 명칭' 컬럼이 올바르게 포함되어 있지 않습니다."
     )
+
+
+logo_img_b64 = get_image_base64("logo.png")
+
+st.markdown(
+    f"""
+    <div style="
+        display: center;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-left: 16px;
+        min-width: 300px;
+    ">
+        <br><img src="{logo_img_b64}" style="width: 200px; height: 50px; object-fit: contain; margin-bottom: 4px;">
+        <span style="font-size: 1.2rem; font-weight: bold; color: #59595b; white-space: nowrap;">ASP 전담팀</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
