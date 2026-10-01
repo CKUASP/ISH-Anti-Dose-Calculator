@@ -186,6 +186,26 @@ pink_img_b64 = get_image_base64("pink.png")
 st.markdown(
     """
     <style>
+    /* 1. 나눔바른고딕 OTF 폰트 불러오기 (CDN) */
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'); /* 대체용 */
+    @font-face {
+        font-family: 'NanumBarunGothic';
+        font-style: normal;
+        font-weight: 400;
+        src: url('https://cdn.jsdelivr.net/gh/fontos/nanum-barun-gothic@1.0/NanumBarunGothic.otf') format('opentype');
+    }
+    @font-face {
+        font-family: 'NanumBarunGothic';
+        font-style: normal;
+        font-weight: 700;
+        src: url('https://cdn.jsdelivr.net/gh/fontos/nanum-barun-gothic@1.0/NanumBarunGothicBold.otf') format('opentype');
+    }
+
+    /* 2. Streamlit 전체 요소 및 주요 컴포넌트에 나눔바른고딕 적용 */
+    html, body, [class*="css"], div, span, p, h1, h2, h3, h4, h5, h6, input, button, select, textarea {
+        font-family: 'NanumBarunGothic', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
+    }
+
     /* number_input의 + / - 증감 버튼 숨기기 */
     button[data-testid="stNumberInputStepDown"],
     button[data-testid="stNumberInputStepUp"] {
@@ -261,6 +281,83 @@ st.markdown(
         background-color: #f1f3f5;
     }
 
+    /* 📱 모바일 화면 (화면 너비 768px 이하) 대응 반응형 스타일 추가 */
+    @media (max-width: 768px) {
+        .dosage-table, 
+        .dosage-table thead, 
+        .dosage-table tbody, 
+        .dosage-table th, 
+        .dosage-table td, 
+        .dosage-table tr {
+            display: block; /* 모바일에서는 모든 테이블 요소를 블록 요소로 전환 */
+        }
+
+        /* 원래 표 헤더(가로 헤더) 숨기기 */
+        .dosage-table thead tr {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+
+        .dosage-table tr {
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .dosage-table td {
+            border: none;
+            border-bottom: 1px solid #e9ecef;
+            position: relative;
+            padding-left: 45%; /* 좌측 헤더 공간 확보 */
+            text-align: right !important; /* 모바일 데이터 값은 우측 정렬 */
+            min-height: 40px;
+            line-height: 1.4;
+        }
+
+        .dosage-table td:last-child {
+            border-bottom: none;
+        }
+
+        /* data-label 속성을 활용해 모바일에서 세로 라벨(신기능 구간) 생성 */
+        .dosage-table td::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40%;
+            padding-right: 10px;
+            white-space: nowrap;
+            text-align: left;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        /* 성분명 행(첫 번째 cell) 디자인 특화 */
+        .dosage-table td.header-col {
+            background-color: #0c4da2 !important;
+            color: #ffffff !important;
+            text-align: center !important;
+            padding-left: 12px !important;
+            font-size: 1.05rem;
+        }
+        .dosage-table td.header-col::before {
+            display: none; /* 성분명에는 좌측 라벨 표시 안함 */
+        }
+
+    }
+
+    @media (max-width: 768px) {
+        .unit-label {
+            padding-top: 0 !important;
+            padding-left: 300px;
+        }
+    }
+
     .title-box {
         background: #ffffff;
         padding: 16px 20px;
@@ -282,7 +379,7 @@ st.markdown(
 
     .title-text {
         color: #0c4da2;
-        font-size: 50px;
+        font-size: 40px;
         font-weight: bold;
         text-align: center;
         margin: 0;
@@ -430,20 +527,14 @@ with col1:
 
     with left_sub:
         st.write("**나이**")
-        s_col1, s_col2 = st.columns([3, 1])
-        with s_col1:
-            age = st.number_input(
-                "나이",
-                min_value=20,
-                max_value=120,
-                value=65,
-                label_visibility="collapsed",
-                placeholder="예: 65",
-            )
-        with s_col2:
-            st.markdown(
-                "<div class='unit-label'>세</div>", unsafe_allow_html=True
-            )
+        age = st.number_input(
+            "나이",
+            min_value=20,
+            max_value=120,
+            value=65,
+            label_visibility="collapsed",
+            placeholder="예: 65",
+        )
 
         st.write("**성별**")
         gender = st.radio(
@@ -479,13 +570,14 @@ with col1:
 
     with right_sub:
         st.write("**키**")
-        h_col1, h_col2 = st.columns([3, 1])
+        h_col1, h_col2 = st.columns([2.5, 1])
         with h_col1:
             height = st.number_input(
                 "키",
                 min_value=30.0,
                 max_value=250.0,
                 value=170.0,
+                format="%.1f",
                 label_visibility="collapsed",
                 placeholder="예: 170.0",
             )
@@ -495,13 +587,14 @@ with col1:
             )
 
         st.write("**체중**")
-        w_col1, w_col2 = st.columns([3, 1])
+        w_col1, w_col2 = st.columns([2.5, 1])
         with w_col1:
             weight = st.number_input(
                 "체중",
                 min_value=10.0,
                 max_value=300.0,
                 value=60.0,
+                format="%.1f",
                 label_visibility="collapsed",
                 placeholder="예: 60.0",
             )
@@ -511,7 +604,7 @@ with col1:
             )
 
         st.write("**혈청 크레아티닌 (SCr)**")
-        s_col1, s_col2 = st.columns([3, 1])
+        s_col1, s_col2 = st.columns([2.5, 1])
         with s_col1:
             scr = st.number_input(
                 "SCr",
@@ -530,7 +623,7 @@ with col1:
         st.markdown("---")
 
         st.write("**Cystatin-C**")
-        c_col1, c_col2 = st.columns([3, 1])
+        c_col1, c_col2 = st.columns([2.5, 1])
         with c_col1:
             cystatin_c = st.number_input(
                 "Cystatin-C",
@@ -575,16 +668,16 @@ with col1:
             justify-content: space-around;
             align-items: center;
             text-align: center;
-            font-size: 1.2rem;
-            margin-bottom: 32px;
+            font-size: 1.1rem;
+            margin-bottom: 44px;
         ">
-            <div><span style="color: #6c757d; font-weight: 600;">IBW</span><br><b style="font-size: 1.1rem; color: #212529;">{res['ibw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
+            <div><span style="color: #6c757d; font-weight: 600;">IBW</span><br><b style="font-size: 1rem; color: #212529;">{res['ibw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
             <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
-            <div><span style="color: #6c757d; font-weight: 600;">AdjBW</span><br><b style="font-size: 1.1rem; color: #212529;">{res['adjbw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
+            <div><span style="color: #6c757d; font-weight: 600;">AdjBW</span><br><b style="font-size: 1rem; color: #212529;">{res['adjbw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
             <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
-            <div><span style="color: #6c757d; font-weight: 600;">{bmi_label}</span><br><b style="font-size: 1.1rem; color: {bmi_color};">{bmi_val:.1f}</b> <small style="color: #6c757d;">kg/m²</small></div>
+            <div><span style="color: #6c757d; font-weight: 600;">{bmi_label}</span><br><b style="font-size: 1rem; color: {bmi_color};">{bmi_val:.1f}</b> <small style="color: #6c757d;">kg/m²</small></div>
             <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
-            <div><span style="color: #6c757d; font-weight: 600;">BSA</span><br><b style="font-size: 1.1rem; color: #212529;">{res['bsa']:.2f}</b> <small style="color: #6c757d;">m²</small></div>
+            <div><span style="color: #6c757d; font-weight: 600;">BSA</span><br><b style="font-size: 1rem; color: #212529;">{res['bsa']:.2f}</b> <small style="color: #6c757d;">m²</small></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -632,7 +725,7 @@ with col2:
         render_metric_card(
             label="🔵 ABW CrCl" if rec == "ABW" else "ABW CrCl",
             value=f"{res['crcl_abw']:.2f}",
-            help_text="Actual Body Weight 기준",
+            help_text="Actual Body Weight",
             is_selected=(rec == "ABW"),
             card_type="crcl",
         )
@@ -640,7 +733,7 @@ with col2:
         render_metric_card(
             label="🔵 IBW CrCl" if rec == "IBW" else "IBW CrCl",
             value=f"{res['crcl_ibw']:.2f}",
-            help_text="Ideal Body Weight 기준",
+            help_text="Ideal Body Weight",
             is_selected=(rec == "IBW"),
             card_type="crcl",
         )
@@ -648,7 +741,7 @@ with col2:
         render_metric_card(
             label="🔵 AdjBW CrCl" if rec == "AdjBW" else "AdjBW CrCl",
             value=f"{res['crcl_adjbw']:.2f}",
-            help_text="Adjusted Body Weight 기준",
+            help_text="Adjusted Body Weight",
             is_selected=(rec == "AdjBW"),
             card_type="crcl",
         )
@@ -661,7 +754,7 @@ with col2:
         render_metric_card(
             label="🟢 BSA 기반 CKD-EPI",
             value=f"{res['ckd_21_bsa']:.2f}",
-            help_text="mL/min (용량 결정 기준)",
+            help_text="mL/min (용량 결정)",
             is_selected=True,
             card_type="egfr",
         )
@@ -677,7 +770,7 @@ with col2:
         render_metric_card(
             label="CKD-EPI eGFR(2009)",
             value=f"{res['ckd_09']:.2f}",
-            help_text="mL/min/1.73m² (본원 결과)",
+            help_text="mL/min/1.73m² (보고값)",
             is_selected=False,
             card_type="egfr",
         )
@@ -690,9 +783,9 @@ with col2:
         cy2, cy3, cy1 = st.columns(3)
         with cy2:
             render_metric_card(
-                label="🟣 BSA 기반 Cr + Cys-C",
+                label="🟣 BSA Cr+Cys-C",
                 value=f"{res['ckd_cys_bsa']:.2f}",
-                help_text="mL/min (용량 결정 기준) <br> BSA 기반 병합 공식",
+                help_text="mL/min (용량 결정) <br> BSA 기반 병합 공식",
                 is_selected=True,
                 card_type="cysc",
             )
@@ -700,14 +793,14 @@ with col2:
             render_metric_card(
                 label="Cys-C eGFR(2012)",
                 value=f"{res['ckd_cys_12']:.2f}",
-                help_text="mL/min/1.73m² (본원 결과) <br> Cystatin-C 단독 공식",
+                help_text="mL/min/1.73m² (보고값) <br> Cystatin-C 단독 공식",
                 is_selected=False,
                 card_type="cysc",
             )
 
         with cy3:
             render_metric_card(
-                label="Cr + Cys-C eGFR(2021)",
+                label="Cr+Cys-C eGFR(2021)",
                 value=f"{res['ckd_cys_21']:.2f}",
                 help_text="mL/min/1.73m² (신기능) <br> Scr + Cystatin-C 병합 공식",
                 is_selected=False,
@@ -849,7 +942,7 @@ if (
             cell_class = "highlight-cysc"
 
         header_html += f"<th>{range_label}</th>"
-        dosage_html += f"<td class='{cell_class}' title='원본 용량: {raw_dose_text}'>{dose_text}</td>"
+        dosage_html += f"<td class='{cell_class}' data-label='{range_label}' title='원본 용량: {raw_dose_text}'>{dose_text}</td>"
 
     header_html += "</tr>"
     dosage_html += "</tr>"
@@ -866,15 +959,18 @@ if (
 
     if use_cysc == "Y":
         st.markdown(
-            "<span style='color: #1E88E5;'>🔵</span> **CrCl**: BMI를 고려한 조정 체중 기반 CrCl 기준 용량 | "
-            "<span style='color: #43A047;'>🟢</span> **eGFR**: BSA를 고려한 CKD-EPI eGFR 기준 용량 | "
-            "<span style='color: #AB47BC;'>🟣</span> **Cys-C**: BSA를 고려한 Cystatin-C eGFR 기준 용량 ",
+            "<span style='color: #1E88E5;'>🔵</span> **CrCl**: BMI 기반 조정 체중 기반 CrCl 기준 용량 "
+            "<br>"
+            "<span style='color: #43A047;'>🟢</span> **eGFR**: BSA 기반 CKD-EPI eGFR 기준 용량 "
+            "<br>"
+            "<span style='color: #AB47BC;'>🟣</span> **Cys-C**: BSA 기반 Cystatin-C eGFR 기준 용량 ",
             unsafe_allow_html=True,
         )
     else:
         st.markdown(
-            "<span style='color: #1E88E5;'>🔵</span> **CrCl 기준**: BMI를 고려한 조정 체중 기반 CrCl 기준 용량 | "
-            "<span style='color: #43A047;'>🟢</span> **eGFR 기준**: BSA를 고려한 CKD-EPI eGFR 기준 용량 ",
+            "<span style='color: #1E88E5;'>🔵</span> **CrCl 기준**: BMI 기반 조정 체중 기반 CrCl 기준 용량 "
+            "<br>"
+            "<span style='color: #43A047;'>🟢</span> **eGFR 기준**: BSA 기반 CKD-EPI eGFR 기준 용량 ",
             unsafe_allow_html=True,
         )
 
