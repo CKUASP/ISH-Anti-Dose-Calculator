@@ -380,7 +380,7 @@ st.markdown(
     .title-text {
         color: #0c4da2;
         font-size: 40px;
-        font-weight: bold;
+        font-weight: 800;
         text-align: center;
         margin: 0;
     }
