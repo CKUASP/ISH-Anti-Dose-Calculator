@@ -82,7 +82,7 @@ def calculate_metrics(age, gender, height, weight, scr, cysc=0.8, use_cysc="N"):
     ckd_epi_cr_cys_2021 = 0.0
     ckd_epi_cys_bsa = 0.0  # 용량 결정용 BSA 보정값
 
-    if use_cysc == "Y" and cysc > 0:
+    if use_cysc == "Y" and cysc is not None and cysc > 0:
         # 1) 2012 CKD-EPI Cystatin C 단독 공식 (Cys-C eGFR 2012)
         min_cysc_12 = min(cysc / 0.8, 1.0)
         max_cysc_12 = max(cysc / 0.8, 1.0)
@@ -116,6 +116,12 @@ def calculate_metrics(age, gender, height, weight, scr, cysc=0.8, use_cysc="N"):
 
         # BSA 적용값 (최신 2021년 eGFR cr-cys 기준)
         ckd_epi_cys_bsa = ckd_epi_cr_cys_2021 * (bsa / 1.73)
+    else:
+    # Cystatin-C 결과값들은 None으로 처리
+        ckd_cys_12 = None
+        ckd_cys_21 = None
+        ckd_cys_bsa = None
+        
 
 
     # 체중별 권장 CrCl 설정
@@ -531,11 +537,10 @@ with col1:
             "나이",
             min_value=20,
             max_value=120,
-            value=65,
+            value=None,
             label_visibility="collapsed",
-            placeholder="예: 65",
         )
-
+        
         st.write("**성별**")
         gender = st.radio(
             "성별",
@@ -545,7 +550,7 @@ with col1:
             key="gender_radio",
             label_visibility="collapsed",
         )
-
+        
         st.write("**투석 여부**")
         dialysis = st.radio(
             "투석 여부",
@@ -570,118 +575,63 @@ with col1:
 
     with right_sub:
         st.write("**키**")
-        h_col1, h_col2 = st.columns([2.5, 1])
-        with h_col1:
-            height = st.number_input(
-                "키",
-                min_value=30.0,
-                max_value=250.0,
-                value=170.0,
-                format="%.1f",
-                label_visibility="collapsed",
-                placeholder="예: 170.0",
-            )
-        with h_col2:
-            st.markdown(
-                "<div class='unit-label'>cm</div>", unsafe_allow_html=True
-            )
+        height = st.number_input(
+            "키",
+            min_value=30.0,
+            max_value=250.0,
+            value=None,
+            format="%.1f",
+            label_visibility="collapsed",
+            placeholder="(cm)",
+        )
 
         st.write("**체중**")
-        w_col1, w_col2 = st.columns([2.5, 1])
-        with w_col1:
-            weight = st.number_input(
-                "체중",
-                min_value=10.0,
-                max_value=300.0,
-                value=60.0,
-                format="%.1f",
-                label_visibility="collapsed",
-                placeholder="예: 60.0",
-            )
-        with w_col2:
-            st.markdown(
-                "<div class='unit-label'>kg</div>", unsafe_allow_html=True
-            )
+        weight = st.number_input(
+            "체중",
+            min_value=10.0,
+            max_value=300.0,
+            value=None,
+            format="%.1f",
+            label_visibility="collapsed",
+            placeholder="(kg)",
+        )
 
         st.write("**혈청 크레아티닌 (SCr)**")
-        s_col1, s_col2 = st.columns([2.5, 1])
-        with s_col1:
-            scr = st.number_input(
-                "SCr",
-                min_value=0.1,
-                max_value=20.0,
-                value=0.8,
-                format="%.2f",
-                label_visibility="collapsed",
-                placeholder="예: 0.80",
-            )
-        with s_col2:
-            st.markdown(
-                "<div class='unit-label'>mg/dL</div>", unsafe_allow_html=True
-            )
+        scr = st.number_input(
+            "SCr",
+            min_value=0.1,
+            max_value=20.0,
+            value=None,
+            format="%.2f",
+            label_visibility="collapsed",
+            placeholder="(mg/dL)"
+        )
+
+
 
         st.markdown("---")
-
-        st.write("**Cystatin-C**")
-        c_col1, c_col2 = st.columns([2.5, 1])
-        with c_col1:
+        if use_cysc == "Y":        
+            st.write("**Cystatin-C**")
             cystatin_c = st.number_input(
                 "Cystatin-C",
                 min_value=0.1,
                 max_value=20.0,
-                value=0.8,
+                value=None,
                 format="%.2f",
-                disabled=(use_cysc == "N"),
                 label_visibility="collapsed",
-                placeholder="예: 0.80",
+                placeholder="(mg/L)"
             )
-        with c_col2:
-            st.markdown(
-                "<div class='unit-label'>mg/L</div>", unsafe_allow_html=True
-            )
+        else:
+            # N을 선택했을 때는 변수를 None으로 할당하여 오류 방지
+            cystatin_c = None    
 
-    res = calculate_metrics(
-        age, gender, height, weight, scr, cystatin_c, use_cysc
+    is_basic_info_ready = all(
+        v is not None for v in [age, height, weight, scr]
     )
-
-# --- [BMI 조건별 스타일 및 아이콘 설정] ---
-    bmi_val = res['bmi']
-    if bmi_val < 18.5:
-        bmi_label = "BMI <span style='color: #4277bf; font-size: 1.2em;'>▼</span>"
-        bmi_color = "#4277bf"  # 파스텔 블루
-    elif bmi_val > 25:
-        bmi_label = "BMI <span style='color: #e66f61; font-size: 1.2em;'>▲</span>"
-        bmi_color = "#e66f61"  # 파스텔 레드
-    else:
-        bmi_label = "BMI"
-        bmi_color = "#212529"  # 기본 다크 그레이
-
-    st.write("")
-    st.markdown(
-        f"""
-        <div style="
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            text-align: center;
-            font-size: 1.1rem;
-            margin-bottom: 44px;
-        ">
-            <div><span style="color: #6c757d; font-weight: 600;">IBW</span><br><b style="font-size: 1rem; color: #212529;">{res['ibw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
-            <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
-            <div><span style="color: #6c757d; font-weight: 600;">AdjBW</span><br><b style="font-size: 1rem; color: #212529;">{res['adjbw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
-            <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
-            <div><span style="color: #6c757d; font-weight: 600;">{bmi_label}</span><br><b style="font-size: 1rem; color: {bmi_color};">{bmi_val:.1f}</b> <small style="color: #6c757d;">kg/m²</small></div>
-            <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
-            <div><span style="color: #6c757d; font-weight: 600;">BSA</span><br><b style="font-size: 1rem; color: #212529;">{res['bsa']:.2f}</b> <small style="color: #6c757d;">m²</small></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    is_cysc_ready = (use_cysc == "N") or (
+        use_cysc == "Y" and cystatin_c is not None
     )
+                           
 
 
 # 📌 [수정] 뭉툭한 네모 박스 형태(카드)로 제목과 수치를 시각화하는 함수
@@ -700,112 +650,176 @@ def render_metric_card(label, value, help_text, is_selected=False, card_type="cr
     st.markdown(html, unsafe_allow_html=True)
 
 
+# ==========================================
+# 필수 입력값 검증 (나이, 키, 체중, SCr)
+# ==========================================
+
+
 with col2:
     st.subheader("📊 신기능 평가 결과")
 
-    rec = res["recommended_crcl"]
-
-    if rec == "AdjBW":
-        st.caption(
-            f"💡 **BMI {res['bmi']:.1f} (과체중):** **AdjBW CrCl** 사용이 권장됩니다."
-        )
-    elif rec == "ABW":
-        st.caption(
-            f"💡 **BMI {res['bmi']:.1f} (저체중):** **ABW(실제체중) CrCl** 사용이 권장됩니다."
+    if not is_basic_info_ready:
+        # 필수 정보(나이, 키, 체중, SCr) 중 하나라도 빈 경우
+        st.info(
+            "👈 **환자 정보를 먼저 입력해 주세요.**"
         )
     else:
-        st.caption(
-            f"💡 **BMI {res['bmi']:.1f} (정상체중):** **IBW CrCl** 사용이 권장됩니다."
+        # 필수 정보가 모두 입력된 경우에만 계산 수행
+        # Cystatin-C가 비어있을 때는 계산 오류 방지를 위해 임시 값(0.8) 전달
+        cysc_calc_val = cystatin_c if cystatin_c is not None else 0.8
+        res = calculate_metrics(
+            age, gender, height, weight, scr, cysc_calc_val, use_cysc
         )
+        bmi_val = res["bmi"]
+        if bmi_val < 18.5:
+            bmi_label = "BMI <span style='color: #4277bf; font-size: 1.2em;'>▼</span>"
+            bmi_color = "#4277bf"
+        elif bmi_val > 25:
+            bmi_label = "BMI <span style='color: #e66f61; font-size: 1.2em;'>▲</span>"
+            bmi_color = "#e66f61"
+        else:
+            bmi_label = "BMI"
+            bmi_color = "#212529"
 
-    st.markdown("##### 🔵 CrCl (Creatinine Clearance)")
+        st.markdown(
+            f"""
+            <div style="
+                background-color: #f8f9fa;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                padding: 6px 8px;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                text-align: center;
+                font-size: 1.1rem;
+                margin-bottom: 18px;
+                margin-top: 7px;
+            ">
+                <div><span style="color: #6c757d; font-weight: 600;">IBW</span><br><b style="font-size: 1rem; color: #212529;">{res['ibw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
+                <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
+                <div><span style="color: #6c757d; font-weight: 600;">AdjBW</span><br><b style="font-size: 1rem; color: #212529;">{res['adjbw']:.1f}</b> <small style="color: #6c757d;">kg</small></div>
+                <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
+                <div><span style="color: #6c757d; font-weight: 600;">{bmi_label}</span><br><b style="font-size: 1rem; color: {bmi_color};">{bmi_val:.1f}</b> <small style="color: #6c757d;">kg/m²</small></div>
+                <div style="border-left: 1px solid #dee2e6; height: 28px;"></div>
+                <div><span style="color: #6c757d; font-weight: 600;">BSA</span><br><b style="font-size: 1rem; color: #212529;">{res['bsa']:.2f}</b> <small style="color: #6c757d;">m²</small></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )    
 
-    c1, c3, c2 = st.columns(3)
-    with c1:
-        render_metric_card(
-            label="🔵 ABW CrCl" if rec == "ABW" else "ABW CrCl",
-            value=f"{res['crcl_abw']:.2f}",
-            help_text="Actual Body Weight",
-            is_selected=(rec == "ABW"),
-            card_type="crcl",
-        )
-    with c3:
-        render_metric_card(
-            label="🔵 IBW CrCl" if rec == "IBW" else "IBW CrCl",
-            value=f"{res['crcl_ibw']:.2f}",
-            help_text="Ideal Body Weight",
-            is_selected=(rec == "IBW"),
-            card_type="crcl",
-        )
-    with c2:
-        render_metric_card(
-            label="🔵 AdjBW CrCl" if rec == "AdjBW" else "AdjBW CrCl",
-            value=f"{res['crcl_adjbw']:.2f}",
-            help_text="Adjusted Body Weight",
-            is_selected=(rec == "AdjBW"),
-            card_type="crcl",
-        )
-    st.markdown("---")
+        rec = res["recommended_crcl"]
+        if rec == "AdjBW":
+            st.caption(
+                f"💡 **BMI {res['bmi']:.1f} (과체중):** **AdjBW CrCl** 사용이 권장됩니다."
+            )
+        elif rec == "ABW":
+            st.caption(
+                f"💡 **BMI {res['bmi']:.1f} (저체중):** **ABW(실제체중) CrCl** 사용이 권장됩니다."
+            )
+        else:
+            st.caption(
+                f"💡 **BMI {res['bmi']:.1f} (정상체중):** **IBW CrCl** 사용이 권장됩니다."
+            )
 
-    st.markdown("##### 🟢 CKD-EPI eGFR")
-    k3, k2, k1 = st.columns(3)
-    with k3:
-        # 약물 용량 결정의 주요 기준이 되는 BSA 기반 항목 네모 박스 하이라이트
-        render_metric_card(
-            label="🟢 BSA 기반 CKD-EPI",
-            value=f"{res['ckd_21_bsa']:.2f}",
-            help_text="mL/min (용량 결정)",
-            is_selected=True,
-            card_type="egfr",
-        )
-    with k2:
-        render_metric_card(
-            label="CKD-EPI eGFR(2021)",
-            value=f"{res['ckd_21']:.2f}",
-            help_text="mL/min/1.73m² (신기능)",
-            is_selected=False,
-            card_type="egfr",
-        )
-    with k1:
-        render_metric_card(
-            label="CKD-EPI eGFR(2009)",
-            value=f"{res['ckd_09']:.2f}",
-            help_text="mL/min/1.73m² (보고값)",
-            is_selected=False,
-            card_type="egfr",
-        )
-
-    st.markdown("---")
-
-    if use_cysc == "Y":
-        
-        st.markdown("##### 🟣 Cystatin-C eGFR")
-        cy2, cy3, cy1 = st.columns(3)
-        with cy2:
+        # ------------------------------------------
+        # 2. CrCl (Creatinine Clearance)
+        # ------------------------------------------
+        st.markdown("##### 🔵 CrCl (Creatinine Clearance)")
+        c1, c3, c2 = st.columns(3)
+        with c1:
             render_metric_card(
-                label="🟣 BSA Cr+Cys-C",
-                value=f"{res['ckd_cys_bsa']:.2f}",
-                help_text="mL/min (용량 결정) <br> BSA 기반 병합 공식",
+                label="🔵 ABW CrCl" if rec == "ABW" else "ABW CrCl",
+                value=f"{res['crcl_abw']:.2f}",
+                help_text="mL/min (실제 체중)",
+                is_selected=(rec == "ABW"),
+                card_type="crcl",
+            )
+        with c3:
+            render_metric_card(
+                label="🔵 IBW CrCl" if rec == "IBW" else "IBW CrCl",
+                value=f"{res['crcl_ibw']:.2f}",
+                help_text="mL/min (이상체중)",
+                is_selected=(rec == "IBW"),
+                card_type="crcl",
+            )
+        with c2:
+            render_metric_card(
+                label="🔵 AdjBW CrCl" if rec == "AdjBW" else "AdjBW CrCl",
+                value=f"{res['crcl_adjbw']:.2f}",
+                help_text="mL/min (조정체중)",
+                is_selected=(rec == "AdjBW"),
+                card_type="crcl",
+            )
+
+        st.markdown("---")
+
+        # ------------------------------------------
+        # 3. CKD-EPI eGFR
+        # ------------------------------------------
+        st.markdown("##### 🟢 CKD-EPI eGFR")
+        k3, k2, k1 = st.columns(3)
+        with k3:
+            render_metric_card(
+                label="🟢 BSA 기반 CKD-EPI",
+                value=f"{res['ckd_21_bsa']:.2f}",
+                help_text="mL/min (용량 결정)",
                 is_selected=True,
-                card_type="cysc",
+                card_type="egfr",
             )
-        with cy1:
+        with k2:
             render_metric_card(
-                label="Cys-C eGFR(2012)",
-                value=f"{res['ckd_cys_12']:.2f}",
-                help_text="mL/min/1.73m² (보고값) <br> Cystatin-C 단독 공식",
+                label="CKD-EPI eGFR(2021)",
+                value=f"{res['ckd_21']:.2f}",
+                help_text="mL/min/1.73m² (신기능)",
                 is_selected=False,
-                card_type="cysc",
+                card_type="egfr",
+            )
+        with k1:
+            render_metric_card(
+                label="CKD-EPI eGFR(2009)",
+                value=f"{res['ckd_09']:.2f}",
+                help_text="mL/min/1.73m² (보고값)",
+                is_selected=False,
+                card_type="egfr",
             )
 
-        with cy3:
-            render_metric_card(
-                label="Cr+Cys-C eGFR(2021)",
-                value=f"{res['ckd_cys_21']:.2f}",
-                help_text="mL/min/1.73m² (신기능) <br> Scr + Cystatin-C 병합 공식",
-                is_selected=False,
-                card_type="cysc",
-            )
+        # ------------------------------------------
+        # 4. Cystatin-C eGFR (Y 선택 시에만 표시)
+        # ------------------------------------------
+        if use_cysc == "Y":
+            st.markdown("---")
+            st.markdown("##### 🟣 Cystatin-C eGFR")
+
+            if cystatin_c is None:
+                # Cystatin-C 검사 여부가 Y인데 값이 빈 경우
+                st.warning("⚠️ **Cystatin-C 검사 결과를 입력해 주세요.**")
+            else:
+                cy2, cy3, cy1 = st.columns(3)
+                with cy2:
+                    render_metric_card(
+                        label="🟣 BSA Cr+Cys-C",
+                        value=f"{res['ckd_cys_bsa']:.2f}",
+                        help_text="mL/min (용량 결정) <br> BSA 기반 병합 공식",
+                        is_selected=True,
+                        card_type="cysc",
+                    )
+                with cy1:
+                    render_metric_card(
+                        label="Cys-C eGFR(2012)",
+                        value=f"{res['ckd_cys_12']:.2f}",
+                        help_text="mL/min/1.73m² (보고값) <br> Cystatin-C 단독 공식",
+                        is_selected=False,
+                        card_type="cysc",
+                    )
+                with cy3:
+                    render_metric_card(
+                        label="Cr+Cys-C eGFR(2021)",
+                        value=f"{res['ckd_cys_21']:.2f}",
+                        help_text="mL/min/1.73m² (신기능) <br> Scr + Cystatin-C 병합 공식",
+                        is_selected=False,
+                        card_type="cysc",
+                    )
 
 st.markdown("---")
 
@@ -843,183 +857,185 @@ def parse_and_calculate_dose(dose_str, weight_kg):
 # 4. 항생제 용량 선택 및 표 출력
 # ==========================================
 st.subheader("💉 항생제 용량 선택")
-
-df_dosage = load_dosage_data()
-
-if (
-    not df_dosage.empty
-    and "성분명" in df_dosage.columns
-    and "표기 명칭" in df_dosage.columns
-):
-    display_names = sorted(df_dosage["표기 명칭"].dropna().unique())
-    selected_display_name = st.selectbox(
-        "항생제 성분명을 검색하거나 선택하세요", display_names
-    )
-
-    drug_df = df_dosage[df_dosage["표기 명칭"] == selected_display_name]
-    ingredient_name = drug_df["성분명"].iloc[0]
-
-    act_wt = res.get("act_wt", weight)
-    adj_wt = res.get("adjbw", weight)
-    bmi_val = res.get("bmi", 0)
-    wt_ratio = res.get("weight_ratio", 0)
-
-    target_drugs = ["amikacin", "gentamicin"]
-    is_target_aminoglycoside = any(
-        td in ingredient_name.lower() or td in selected_display_name.lower()
-        for td in target_drugs
-    )
-
-    is_obese = (wt_ratio > 120) or (bmi_val >= 30)
-
-    if is_target_aminoglycoside and is_obese:
-        patient_weight = adj_wt
-        wt_calc_label = "AdjBW (보정체중)"
-    else:
-        patient_weight = act_wt
-        wt_calc_label = "Actual BW (실제체중)"
-
-    def is_in_range(val, min_val, max_val, current_dialysis, cell_label):
-        if current_dialysis != "해당 없음":
-            return current_dialysis == cell_label
-        if min_val >= 0:
-            if max_val >= 999:
-                return val >= min_val
-            return min_val <= val <= max_val
-        return False
-
-    crcl_val = res["rec_crcl_val"]
+if not is_basic_info_ready:
+    st.info("💡 환자 정보 입력 시 항생제 용량 표를 확인할 수 있습니다.")
+else:
+    df_dosage = load_dosage_data()
 
     if (
-        "ertapenem" in ingredient_name.lower()
-        or "ertapenem" in selected_display_name.lower()
+        not df_dosage.empty
+        and "성분명" in df_dosage.columns
+        and "표기 명칭" in df_dosage.columns
     ):
-        egfr_val = res["ckd_21"]
-        cysc_val = res["ckd_cys_21"]
+        display_names = sorted(df_dosage["표기 명칭"].dropna().unique())
+        selected_display_name = st.selectbox(
+            "항생제 성분명 및 제품명을 바로 입력하거나 선택하세요", display_names
+        )
+
+        drug_df = df_dosage[df_dosage["표기 명칭"] == selected_display_name]
+        ingredient_name = drug_df["성분명"].iloc[0]
+
+        act_wt = res.get("act_wt", weight)
+        adj_wt = res.get("adjbw", weight)
+        bmi_val = res.get("bmi", 0)
+        wt_ratio = res.get("weight_ratio", 0)
+
+        target_drugs = ["amikacin", "gentamicin"]
+        is_target_aminoglycoside = any(
+            td in ingredient_name.lower() or td in selected_display_name.lower()
+            for td in target_drugs
+        )
+
+        is_obese = (wt_ratio > 120) or (bmi_val >= 30)
+
+        if is_target_aminoglycoside and is_obese:
+            patient_weight = adj_wt
+            wt_calc_label = "AdjBW (보정체중)"
+        else:
+            patient_weight = act_wt
+            wt_calc_label = "Actual BW (실제체중)"
+
+        def is_in_range(val, min_val, max_val, current_dialysis, cell_label):
+            if current_dialysis != "해당 없음":
+                return current_dialysis == cell_label
+            if min_val >= 0:
+                if max_val >= 999:
+                    return val >= min_val
+                return min_val <= val <= max_val
+            return False
+
+        crcl_val = res["rec_crcl_val"]
+
+        if (
+            "ertapenem" in ingredient_name.lower()
+            or "ertapenem" in selected_display_name.lower()
+        ):
+            egfr_val = res["ckd_21"]
+            cysc_val = res["ckd_cys_21"]
+        else:
+            egfr_val = res["ckd_21_bsa"]
+            cysc_val = res["ckd_cys_bsa"]
+
+        header_html = "<tr><th>성분명</th>"
+        dosage_html = f"<tr><td class='header-col'>{ingredient_name}</td>"
+
+        for _, row in drug_df.iterrows():
+            range_label = str(row["신기능구간명"])
+            raw_dose_text = row["추천용량"]
+
+            dose_text = parse_and_calculate_dose(raw_dose_text, patient_weight)
+
+            min_c = float(row["최소CrCl"])
+            max_c = float(row["최대CrCl"])
+
+            match_crcl = is_in_range(
+                crcl_val, min_c, max_c, dialysis, range_label
+            )
+            match_egfr = is_in_range(
+                egfr_val, min_c, max_c, dialysis, range_label
+            )
+            match_cysc = (
+                is_in_range(cysc_val, min_c, max_c, dialysis, range_label)
+                if use_cysc == "Y"
+                else False
+            )
+
+            cell_class = ""
+
+            if match_crcl and match_egfr and match_cysc:
+                cell_class = "highlight-all"
+            elif match_crcl and match_egfr:
+                cell_class = "highlight-crcl-egfr"
+            elif match_crcl and match_cysc:
+                cell_class = "highlight-crcl-cysc"
+            elif match_egfr and match_cysc:
+                cell_class = "highlight-egfr-cysc"
+            elif match_crcl:
+                cell_class = "highlight-crcl"
+            elif match_egfr:
+                cell_class = "highlight-egfr"
+            elif match_cysc:
+                cell_class = "highlight-cysc"
+
+            header_html += f"<th>{range_label}</th>"
+            dosage_html += f"<td class='{cell_class}' data-label='{range_label}' title='원본 용량: {raw_dose_text}'>{dose_text}</td>"
+
+        header_html += "</tr>"
+        dosage_html += "</tr>"
+
+        table_html = f"""
+        <table class='dosage-table'>
+            <thead>{header_html}</thead>
+            <tbody>{dosage_html}</tbody>
+        </table>
+        """
+
+        st.markdown(table_html, unsafe_allow_html=True)
+        st.write("")
+
+        if use_cysc == "Y":
+            st.markdown(
+                "<span style='color: #1E88E5;'>🔵</span> **CrCl**: BMI 기반 조정 체중 기반 CrCl 기준 용량 "
+                "<br>"
+                "<span style='color: #43A047;'>🟢</span> **eGFR**: BSA 기반 CKD-EPI eGFR 기준 용량 "
+                "<br>"
+                "<span style='color: #AB47BC;'>🟣</span> **Cys-C**: BSA 기반 Cystatin-C eGFR 기준 용량 ",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                "<span style='color: #1E88E5;'>🔵</span> **CrCl 기준**: BMI 기반 조정 체중 기반 CrCl 기준 용량 "
+                "<br>"
+                "<span style='color: #43A047;'>🟢</span> **eGFR 기준**: BSA 기반 CKD-EPI eGFR 기준 용량 ",
+                unsafe_allow_html=True,
+            )
+
+        crab_keywords = ["CRAB"]
+        if any(
+            keyword.lower() in ingredient_name.lower()
+            or keyword.lower() in selected_display_name.lower()
+            for keyword in crab_keywords
+        ):
+            st.markdown("---")
+            st.warning(
+                "⚠️ **[CRAB 감염 용량 설정]**\n\n"
+                "* **CRAB 감염:** CRAB(카바페넴 내성 Acinetobacter baumannii) 감염 치료 시 권고되는 **High dose Sulbactam** 요법입니다.\n"
+                "* 임상의의 판단에 따라 **CrCl 30~90mL/min**의 환자에서 용량을 줄이지 않고 정상 신기능 용량인 **9g q8h(Sulbactam 기준 3g q8h)** 투여를 고려할 수 있습니다."
+            )
+
+        vanco_keywords = ["Vancomycin"]
+        if any(
+            keyword.lower() in ingredient_name.lower()
+            or keyword.lower() in selected_display_name.lower()
+            for keyword in vanco_keywords
+        ):
+            st.markdown("---")
+            st.warning(
+                "⚠️ **[Vancomycin 용량 설정]**\n\n"
+                "* **Vancomycin:** IV Vancomycin의 용량은 TDM을 통해 설정하는 것이 권고됩니다.\n"
+                "* 1일 총 용량이 3G을 초과하는 경우 AKI risk가 있으므로 감염내과 협진 통하여 용량을 조절하시기 바랍니다."
+            )
+
+        amino_keywords = ["Amikacin", "Gentamicin"]
+        if any(
+            keyword.lower() in ingredient_name.lower()
+            or keyword.lower() in selected_display_name.lower()
+            for keyword in amino_keywords
+        ):
+            st.markdown("---")
+            st.warning(
+                "⚠️ **[Amikacin/Gentamicin 용량 설정]**\n\n"
+                "* 비만 환자에서 Aminoglycoside의 용량 계산은 권고사항에 따라 **조정 체중(AdjBW)**으로 계산되었습니다.\n"
+            )
+
+        st.caption(
+            f"※ 체중 당 용량이 권고되는 항생제는 입력된 **실제 체중({patient_weight:.1f} kg)** 기준으로 계산되어 표시됩니다."
+        )
+
     else:
-        egfr_val = res["ckd_21_bsa"]
-        cysc_val = res["ckd_cys_bsa"]
-
-    header_html = "<tr><th>성분명</th>"
-    dosage_html = f"<tr><td class='header-col'>{ingredient_name}</td>"
-
-    for _, row in drug_df.iterrows():
-        range_label = str(row["신기능구간명"])
-        raw_dose_text = row["추천용량"]
-
-        dose_text = parse_and_calculate_dose(raw_dose_text, patient_weight)
-
-        min_c = float(row["최소CrCl"])
-        max_c = float(row["최대CrCl"])
-
-        match_crcl = is_in_range(
-            crcl_val, min_c, max_c, dialysis, range_label
+        st.error(
+            "엑셀 파일이 존재하지 않거나 '성분명'과 '표기 명칭' 컬럼이 올바르게 포함되어 있지 않습니다."
         )
-        match_egfr = is_in_range(
-            egfr_val, min_c, max_c, dialysis, range_label
-        )
-        match_cysc = (
-            is_in_range(cysc_val, min_c, max_c, dialysis, range_label)
-            if use_cysc == "Y"
-            else False
-        )
-
-        cell_class = ""
-
-        if match_crcl and match_egfr and match_cysc:
-            cell_class = "highlight-all"
-        elif match_crcl and match_egfr:
-            cell_class = "highlight-crcl-egfr"
-        elif match_crcl and match_cysc:
-            cell_class = "highlight-crcl-cysc"
-        elif match_egfr and match_cysc:
-            cell_class = "highlight-egfr-cysc"
-        elif match_crcl:
-            cell_class = "highlight-crcl"
-        elif match_egfr:
-            cell_class = "highlight-egfr"
-        elif match_cysc:
-            cell_class = "highlight-cysc"
-
-        header_html += f"<th>{range_label}</th>"
-        dosage_html += f"<td class='{cell_class}' data-label='{range_label}' title='원본 용량: {raw_dose_text}'>{dose_text}</td>"
-
-    header_html += "</tr>"
-    dosage_html += "</tr>"
-
-    table_html = f"""
-    <table class='dosage-table'>
-        <thead>{header_html}</thead>
-        <tbody>{dosage_html}</tbody>
-    </table>
-    """
-
-    st.markdown(table_html, unsafe_allow_html=True)
-    st.write("")
-
-    if use_cysc == "Y":
-        st.markdown(
-            "<span style='color: #1E88E5;'>🔵</span> **CrCl**: BMI 기반 조정 체중 기반 CrCl 기준 용량 "
-            "<br>"
-            "<span style='color: #43A047;'>🟢</span> **eGFR**: BSA 기반 CKD-EPI eGFR 기준 용량 "
-            "<br>"
-            "<span style='color: #AB47BC;'>🟣</span> **Cys-C**: BSA 기반 Cystatin-C eGFR 기준 용량 ",
-            unsafe_allow_html=True,
-        )
-    else:
-        st.markdown(
-            "<span style='color: #1E88E5;'>🔵</span> **CrCl 기준**: BMI 기반 조정 체중 기반 CrCl 기준 용량 "
-            "<br>"
-            "<span style='color: #43A047;'>🟢</span> **eGFR 기준**: BSA 기반 CKD-EPI eGFR 기준 용량 ",
-            unsafe_allow_html=True,
-        )
-
-    crab_keywords = ["CRAB"]
-    if any(
-        keyword.lower() in ingredient_name.lower()
-        or keyword.lower() in selected_display_name.lower()
-        for keyword in crab_keywords
-    ):
-        st.markdown("---")
-        st.warning(
-            "⚠️ **[CRAB 감염 용량 설정]**\n\n"
-            "* **CRAB 감염:** CRAB(카바페넴 내성 Acinetobacter baumannii) 감염 치료 시 권고되는 **High dose Sulbactam** 요법입니다.\n"
-            "* 임상의의 판단에 따라 **CrCl 30~90mL/min**의 환자에서 용량을 줄이지 않고 정상 신기능 용량인 **9g q8h(Sulbactam 기준 3g q8h)** 투여를 고려할 수 있습니다."
-        )
-
-    vanco_keywords = ["Vancomycin"]
-    if any(
-        keyword.lower() in ingredient_name.lower()
-        or keyword.lower() in selected_display_name.lower()
-        for keyword in vanco_keywords
-    ):
-        st.markdown("---")
-        st.warning(
-            "⚠️ **[Vancomycin 용량 설정]**\n\n"
-            "* **Vancomycin:** IV Vancomycin의 용량은 TDM을 통해 설정하는 것이 권고됩니다.\n"
-            "* 1일 총 용량이 3G을 초과하는 경우 AKI risk가 있으므로 감염내과 협진 통하여 용량을 조절하시기 바랍니다."
-        )
-
-    amino_keywords = ["Amikacin", "Gentamicin"]
-    if any(
-        keyword.lower() in ingredient_name.lower()
-        or keyword.lower() in selected_display_name.lower()
-        for keyword in amino_keywords
-    ):
-        st.markdown("---")
-        st.warning(
-            "⚠️ **[Amikacin/Gentamicin 용량 설정]**\n\n"
-            "* 비만 환자에서 Aminoglycoside의 용량 계산은 권고사항에 따라 **조정 체중(AdjBW)**으로 계산되었습니다.\n"
-        )
-
-    st.caption(
-        f"※ 체중 당 용량이 권고되는 항생제는 입력된 **실제 체중({patient_weight:.1f} kg)** 기준으로 계산되어 표시됩니다. (셀 마우스 오버 시 원본 단위 확인 가능)"
-    )
-
-else:
-    st.error(
-        "엑셀 파일이 존재하지 않거나 '성분명'과 '표기 명칭' 컬럼이 올바르게 포함되어 있지 않습니다."
-    )
 
 
 logo_img_b64 = get_image_base64("logo.png")
