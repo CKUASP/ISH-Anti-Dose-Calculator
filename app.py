@@ -758,24 +758,16 @@ with col2:
         # 3. CKD-EPI eGFR
         # ------------------------------------------
         st.markdown("##### 🟢 CKD-EPI eGFR")
-        k3, k2, k1 = st.columns(3)
-        with k3:
+        k1, k2 = st.columns(2)
+        with k1:
             render_metric_card(
-                label="🟢 BSA 기반 CKD-EPI",
-                value=f"{res['ckd_21_bsa']:.2f}",
-                help_text="mL/min (용량 결정)",
-                is_selected=True,
+                label="🟢 CKD-EPI eGFR(2021)",
+                value=f"{res['ckd_21']:.2f}",
+                help_text="mL/min/1.73m² (신기능)",
+                is_selected=(rec == "IBW" or rec == "AdjBW" or rec == "ABW"),
                 card_type="egfr",
             )
         with k2:
-            render_metric_card(
-                label="CKD-EPI eGFR(2021)",
-                value=f"{res['ckd_21']:.2f}",
-                help_text="mL/min/1.73m² (신기능)",
-                is_selected=False,
-                card_type="egfr",
-            )
-        with k1:
             render_metric_card(
                 label="CKD-EPI eGFR(2009)",
                 value=f"{res['ckd_09']:.2f}",
@@ -795,29 +787,21 @@ with col2:
                 # Cystatin-C 검사 여부가 Y인데 값이 빈 경우
                 st.warning("⚠️ **Cystatin-C 검사 결과를 입력해 주세요.**")
             else:
-                cy2, cy3, cy1 = st.columns(3)
+                cy1, cy2 = st.columns(2)
                 with cy2:
                     render_metric_card(
-                        label="🟣 BSA Cr+Cys-C",
-                        value=f"{res['ckd_cys_bsa']:.2f}",
-                        help_text="mL/min (용량 결정) <br> BSA 기반 병합 공식",
-                        is_selected=True,
+                        label="Cystatin-C eGFR(2012)",
+                        value=f"{res['ckd_cys_12']:.2f}",
+                        help_text="mL/min/1.73m² (보고값) Cystatin-C 단독 공식",
+                        is_selected=False,
                         card_type="cysc",
                     )
                 with cy1:
                     render_metric_card(
-                        label="Cys-C eGFR(2012)",
-                        value=f"{res['ckd_cys_12']:.2f}",
-                        help_text="mL/min/1.73m² (보고값) <br> Cystatin-C 단독 공식",
-                        is_selected=False,
-                        card_type="cysc",
-                    )
-                with cy3:
-                    render_metric_card(
-                        label="Cr+Cys-C eGFR(2021)",
+                        label="🟣 Scr + Cystatin-C eGFR(2021)",
                         value=f"{res['ckd_cys_21']:.2f}",
-                        help_text="mL/min/1.73m² (신기능) <br> Scr + Cystatin-C 병합 공식",
-                        is_selected=False,
+                        help_text="mL/min/1.73m² : Scr + Cystatin-C 병합 공식",
+                        is_selected=(rec == "IBW" or rec == "AdjBW" or rec == "ABW"),
                         card_type="cysc",
                     )
 
@@ -905,16 +889,8 @@ else:
             return False
 
         crcl_val = res["rec_crcl_val"]
-
-        if (
-            "ertapenem" in ingredient_name.lower()
-            or "ertapenem" in selected_display_name.lower()
-        ):
-            egfr_val = res["ckd_21"]
-            cysc_val = res["ckd_cys_21"]
-        else:
-            egfr_val = res["ckd_21_bsa"]
-            cysc_val = res["ckd_cys_bsa"]
+        egfr_val = res["ckd_21"]
+        cysc_val = res["ckd_cys_21"]
 
         header_html = "<tr><th>성분명</th>"
         dosage_html = f"<tr><td class='header-col'>{ingredient_name}</td>"
