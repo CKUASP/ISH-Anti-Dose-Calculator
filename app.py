@@ -953,16 +953,16 @@ else:
             st.markdown(
                 "<span style='color: #1E88E5;'>🔵</span> **CrCl**: BMI 기반 조정 체중 기반 CrCl 기준 용량 "
                 "<br>"
-                "<span style='color: #43A047;'>🟢</span> **eGFR**: BSA 기반 CKD-EPI eGFR 기준 용량 "
+                "<span style='color: #43A047;'>🟢</span> **eGFR**: 2021년 식 기준 CKD-EPI eGFR 기준 용량 "
                 "<br>"
-                "<span style='color: #AB47BC;'>🟣</span> **Cys-C**: BSA 기반 Cystatin-C eGFR 기준 용량 ",
+                "<span style='color: #AB47BC;'>🟣</span> **Cys-C**: 2021년 식 기준 Cystatin-C eGFR 기준 용량 ",
                 unsafe_allow_html=True,
             )
         else:
             st.markdown(
                 "<span style='color: #1E88E5;'>🔵</span> **CrCl 기준**: BMI 기반 조정 체중 기반 CrCl 기준 용량 "
                 "<br>"
-                "<span style='color: #43A047;'>🟢</span> **eGFR 기준**: BSA 기반 CKD-EPI eGFR 기준 용량 ",
+                "<span style='color: #43A047;'>🟢</span> **eGFR 기준**: 2021년 식 기준 CKD-EPI eGFR 기준 용량 ",
                 unsafe_allow_html=True,
             )
 
